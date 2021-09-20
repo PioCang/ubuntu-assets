@@ -1,0 +1,11 @@
+let g:netrw_dirhistmax  =10
+let g:netrw_dirhist_cnt =9
+let g:netrw_dirhist_1='/home/user/jatolentino/train/2016_july/ccc_demo/bcom'
+let g:netrw_dirhist_2='/home/user/pcang/train/NGEN/_scratch_dir'
+let g:netrw_dirhist_3='/home/user/pcang/.vim/colors'
+let g:netrw_dirhist_4='/home/user/pcang/train/NGEN/_scratch_dir'
+let g:netrw_dirhist_5='/home/user/pcang/chato_santana/_schemas'
+let g:netrw_dirhist_6='/home/user/pcang/.vim'
+let g:netrw_dirhist_7='/home/user/pcang/.vim/bundle'
+let g:netrw_dirhist_8='/home/fonix/prd_progs/bcomcts/ccc/iboxx_albi_sgd'
+let g:netrw_dirhist_9='/home/user/pcang/.vim'

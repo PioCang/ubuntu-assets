@@ -1,0 +1,219 @@
+source /home/user/pcang/.prompt_git
+if [ -e /var/cfengine/classes/nextgen ]
+then
+    source /home/fonix/prd_progs/tools/engineering-login.sh
+    source /home/fonix/prd_progs/tools/fdb_utils.sh
+    source /home/fonix/prd_progs/tools/dbl/dbl_defs.sh
+    source /home/fonix/prd_progs/tools/uniframe/common_defs.sh
+else
+    echo "*** This does not appear to be a NEXTGEN CLASS MACHINE, skipping NEXTGEN specific set-up ***"
+fi
+source /home/user/pcang/.prompt_git
+
+
+# PROMPT_COMMAND is a special variable that's evaluated each time you enter/return to the shell from.
+function __ps1_newline_login {
+    #staging locations color yellow
+    if [[ $PWD/ = /home/fonix/data2/* ]]; then
+        export PS1="\e[1;33m\! \e[0;32m\u\e[1;37m@\e[0;37m\H $(get_bcom_env) \e[1;37m[\e[1;31m\d \t\e[1;37m]\n\e[43m\e[30m$( pwd )/\e[40m\e[1;37m $(prompt_git)# "
+
+    #prod locations color red
+    elif [[ $PWD/ = /home/user/pcang/main/* || $PWD/ = /home/fonix/* || $PWD/ = /home/data/* || $PWD/ = /home/user/pcang/dev/shared* ]]; then
+        export PS1="\e[1;33m\! \e[0;32m\u\e[1;37m@\e[0;37m\H $(get_bcom_env) \e[1;37m[\e[1;31m\d \t\e[1;37m]\n\e[41m\e[1;93m$( pwd )/\e[40m\e[1;37m >>> $(prompt_git) <<<\n# "
+
+    else
+        export PS1="\e[1;33m\! \e[0;32m\u\e[1;37m@\e[0;37m\H $(get_bcom_env) \e[1;37m[\e[1;31m\d \t\e[1;37m] \e[1;36m$( pwd )/\e[1;37m $(prompt_git)\n\$ "
+    fi
+}
+PROMPT_COMMAND='__ps1_newline_login'
+
+
+
+# Disable XOFF (ctrl+s) from Ruining Everything.
+stty -ixon
+
+# AsiaPac Perl Critic and Perl Tidy
+alias appc='perlcritic --profile /home/fonix/prd_progs/asiapac/tools/perlcriticrc'
+alias appt='perltidy -b --pro=/home/fonix/prd_progs/asiapac/tools/perltidyrc'
+
+# Turbo Check Plus for Uniframe systems
+alias tcp='perl /home/fonix/prd_progs/tools/uniframe/utils/turbo_check_plus.pl'
+
+# ReviewBoard
+alias rb='/home/data/index/script/common/submit_review_board.pl'
+
+alias emacs="emacs -rv"
+alias lsd="ls -harlS"
+alias rls="while true; do clear; rakelog summary; sleep 30; done"
+
+# Perforce environment variables
+export P4PORT="scm.factset.com:1666"
+export P4CONFIG=".p4rc"
+export P4DIFF="vim -b -d -c 'set diffopt+=iwhite'"
+export P4EDITOR="vim"
+export P4USER="pcang"
+export EDITOR="vim"
+alias p4not='find . -type f -print0 | xargs -0 p4 fstat'
+alias p4all='find . -type f -print | p4 -x - add'
+
+# More user-friendly
+alias perf="p4"
+alias ll="ls -al --color=auto"
+alias dirsize="du -sh"
+alias tt2="set term/inquire"
+
+# Useful shortcut for logging into asiapac_mgr's interactive shell
+# You'll need this for editing the crontab and p4 syncing
+alias suas="sudo -u asiapac_mgr -i"
+alias slo='source /home/fonix/prd_progs/price/tools/logout.sh asiapac_mgr'
+
+# To add date and time to your history
+export HISTTIMEFORMAT="%d/%m/%y %T "
+
+# BCOM symbols, environment variables, aliases
+source /home/fonix/prd_progs/tools/bestcom/common_defs.sh
+source /home/fonix/prd_progs/bcomcts/tools/ccc_common_profile_user.sh
+
+
+# From Nazi
+fds_date_main_custom() {
+    if [ $# -ne 3 ]
+    then
+        echo "usage: fds_date_main_custom <calendar> <date><-/+><offset> <holiday_file>"
+        return $?
+    fi
+    calendar=$1
+    date_offset=$2
+    holiday=$3
+    date=${date_offset:0:8}
+    offset=${date_offset:8}
+    outcome=$(fds_date_main $calendar $date_offset)
+    while true; do
+        if grep $outcome $holiday > /dev/null; then
+            outcome=$(fds_date_main FIVEDAY $outcome$offset)
+        else
+            break
+        fi
+    done 
+    echo $outcome
+    #return $outcome
+}
+
+
+
+######################################################### VINCE's stuff #########################################################
+
+export bdi_stg_db="/home/fonix/data2/bcomcts/prod/ccc/db/"
+export prd_scripts="/home/fonix/prd_progs/bcomcts/ccc/"
+export prod_dir=pwd
+
+alias v='vim -b'
+alias vimdiff2='vim -b -d -c "set diffopt+=iwhite"'
+alias gitdiff2='git diff -w -U0 --word-diff-regex=[^[:space:]]'
+
+# everytime you change directory, list all files right away
+# but if directory doesn't exist, show the error message
+ChangeDirAndList() {
+    if [[ -d $PWD'/'$1 || -d $1 ]]; then
+        cd $1
+        ls -al --color=auto
+    else
+        cd $1
+    fi
+}
+alias c=ChangeDirAndList
+
+# find pattern $1 in subdirectories then color them with grep
+FindAndColor() {
+    find . -iname *$1* -print | grep -i --color=always $1
+}
+alias gf=FindAndColor
+
+ListAndGrep() {
+    if [[ -z $2 ]]; then
+        ls -alt | grep -i --color=always $1
+    else
+        ls -alt $1 | grep -i --color=always $2
+    fi
+}
+
+alias gl=ListAndGrep
+
+
+PerfIntegrator1() {
+    p4 integrate -f //depot/fonix/prd_progs/bcomcts/ccc/$1 //depot/common/pcang/dev/$1
+}
+PerfIntegrator2() {
+    if [[ -z $2 ]]; then
+        p4 integrate -f //depot/common/pcang/dev/$1 //depot/fonix/prd_progs/bcomcts/ccc/$1
+    else
+        p4 integrate -f -c $1 //depot/common/pcang/dev/$2 //depot/fonix/prd_progs/bcomcts/ccc/$2
+    fi
+}
+
+alias intfromprod=PerfIntegrator1
+alias intfromdev=PerfIntegrator2
+
+
+ViewHoliday() {
+   v -b /home/fonix/data/factset/holiday/holiday_"$1".dat 
+}
+alias holiday=ViewHoliday
+
+AutoXMLExpand() {
+    xmllint --xinclude "$1" > "$2"
+}
+alias xl=AutoXMLExpand
+
+#Check if a file is being used by a ccc feed
+ReissueSearch() {
+    if [ "$#" -eq 0 ]; then
+        printf "Usage:\n\nReissueSearch [output_file] <query>\nIf output_file is specified, the results are written on to the specified file.\n If not, results are printed on the screen.\n" 
+    elif [ "$#" -eq 1 ]; then
+        grep -r -i $1 /home/fonix/prd_progs/bcomcts/ccc/ --include "*.xml" | grep -P -o "ccc\/.*" | grep "ngen:file " | grep -o -P 'ccc/\w+/' | sort -u
+    elif [ "$#" -eq 2 ]; then
+        echo ">>>>>>>>>>>>>>>>>>>> "$2" <<<<<<<<<<<<<<<<<<<<" >> $1
+        grep -r -i $2 /home/fonix/prd_progs/bcomcts/ccc/ --include "*.xml" | grep -P -o "ccc\/.*" | grep "ngen:file " | sort -u >> $1
+        printf "\n\n\n" >> $1
+    else
+        echo "ERROR: I cannot handle more than two arguments. If the filename has spaces, pick a keyword from the name instead.\n"
+        printf "Usage:\n\nReissueSearch [output_file] <query>\nIf output_file is specified, the results are written on to the specified file.\n If not, results are printed on the screen.\n" 
+    fi
+}
+
+alias reissue=ReissueSearch
+alias qsf="(quetex show; quetex show_universal) | grep -i --color=always"
+alias gh="history | grep -i --color=always"
+
+Pause() {
+    read -p "Press any key to continue"
+}
+
+
+# Quick goto-directory commands
+alias dev="c ~/dev/"
+alias main="c ~/main/"
+alias prodfdbs="c /home/fonix/data/bcomcts/prod/ccc/db/"
+alias stgfdbs="c /home/fonix/data2/bcomcts/prod/ccc/db/"
+alias prodprogs="c /home/fonix/prd_progs/bcomcts/ccc/"
+alias prodarcs="c /home/archive/bcomcts/"
+alias scratchdir="c /home/dev/scratch/developers/pcang/"
+
+#Everytime you copy, ask for confimation if overwrite is needed and be verbose about it.
+alias cp="cp -i -v"
+
+#Everytime you move/rename, ask for confirmation if overwrite is needed and be verbose about it.
+alias mv="mv -i -v"
+
+#Everytime you delete, ask for confirmation for each file and be verbose about it.
+alias rm="rm -i -v"
+
+alias jy="joey -d /home/user/pcang/dev/eri_amundi/_defs.dat"
+alias wombatdiff="perl /home/user/mcaabay/workflow_differ/workflow_differ.pl"
+alias xlsx2txt="perl /home/fonix/prd_progs/bcomcts/tools/xlsx2txt/xlsx2txt.pl"
+alias ta="tmux -2u a -t "
+alias tn="tmux -2u new-session -s "
+alias tl="tmux ls"
+alias mygd='source /home/fonix/prd_progs/tools/define_rakefds_logicals.sh release; source /home/fonix/prd_progs/tools/define_python3.sh bcomcts_mgr'
+alias ngf='ngen_get_files'
+alias nfr='ngen_fetch_report'
